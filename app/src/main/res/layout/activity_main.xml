@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.a2017101705.rawmealogger.MainActivity">
+<LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <Button
+        android:id="@+id/start"
+        android:text="\u2770 Start"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/clear"
+        android:text="Clear"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/end"
+        android:text="End \u2771"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
+
+<ScrollView
+    android:id="@+id/log_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1">
+        <TextView
+            android:id="@+id/log_view"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:text="RAW GNSS data" />
+
+
+</ScrollView>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom">
+    <Button
+        android:id="@+id/start_log"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="Start   Log"
+        />
+    <Button
+        android:id="@+id/on_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="on/stop"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:background="@drawable/login_button_selector"
+        />
+
+    <Button
+        android:id="@+id/stop_log"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Stop Log and save"
+        android:textAllCaps="false" />
+
+
+</LinearLayout>
+
+</LinearLayout>

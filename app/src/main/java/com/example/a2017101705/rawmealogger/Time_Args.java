@@ -9,4 +9,5 @@ public class Time_Args{
         public  double sec;
         public  double TowSec;
         public  String UTCtime;
+        public  String  GPStime;
 }

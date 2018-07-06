@@ -4,7 +4,7 @@ package com.example.a2017101705.rawmealogger;
  * Created by 2017101705 on 2018/5/8.
  */
 
-public class Ephemeris {
+public class Ephemeris {           //没有封装
         public int Svid;
         public int toc;
         public double af0;

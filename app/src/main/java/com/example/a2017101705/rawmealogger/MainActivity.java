@@ -738,17 +738,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     builder.append(String.format(format, "L1phase is ", getL1phase(measurement) + "\n\n"));
                     builder.append("----------------------\n");
                     if (doWrite) {
-                        String fileName = String.format("%s_%s.txt", "gnssMeasurement", getGNSSObstype(measurement));
+//                        String fileName = String.format("%s_%s.txt", "gnssMeasurement", getGNSSObstype(measurement));
 //                                String measurementStream = String.format("%s,%s,%s,%s",getUTCTime(gnssClock).UTCtime,getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement))+"\n";
-                        String measurementStream = String.format("%s,%s,%s,%s,%s,%s,%s,%s", getUTCTime(gnssClock).UTCtime, getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement), gnssClock.getFullBiasNanos(), fixedFullbiasnanos, gnssClock.getTimeNanos(), measurement.getReceivedSvTimeNanos()) + "\n";
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
-                        String str = sdf.format(new Date());
-                        String msg = str + "," + getUTCTime(gnssClock).UTCtime + ",\n";
-                        writeToFile("UTC_VS_Date.txt", msg);
+//                        String measurementStream = String.format("%s,%s,%s,%s,%s,%s,%s,%s", getUTCTime(gnssClock).UTCtime, getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement), gnssClock.getFullBiasNanos(), fixedFullbiasnanos, gnssClock.getTimeNanos(), measurement.getReceivedSvTimeNanos()) + "\n";
+
 //                        writeToFile(fileName, measurementStream);
 
                         if (dataFilter(measurement, gnssClock) && getPseudorange(measurement, gnssClock) < 9e9) {
                             cnt++;
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
+                            String str = sdf.format(new Date());
+                            String msg = str + "," + getUTCTime(gnssClock).UTCtime + ",\n";
+                            writeToFile("GPS_VS_Date.txt", msg);
+
                             String measurementStream2 = String.format("%s%14.3f  %14.3f  %14.3f  %14.3f", getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement),
                                     getDoppler(measurement), getCN0(measurement));
                             rinexObsStream[cnt] = measurementStream2;

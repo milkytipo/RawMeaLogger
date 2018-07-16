@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private LocationManager locationManager;
     private String measurementStream;
-    private Button start,end,clear,startLog,stopLog,on,btnConn,btnRecv;
+    private Button start,end,clear,startLog,stopLog,on,btnConn,btnRecv,move;
     private TextView logView,scText,IMUView;
     private EditText editCasterIp,editCasterPort,editUsername,editPassword,editLatitude,editLongitude;
     private ScrollView scrollView;
@@ -95,10 +95,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private long fixedFullbiasnanos=0;
     private Ephemeris eph =new Ephemeris();
     private int  count = 0;
+    private int count2= 0;
     private int  cntDB = 0;
     private int  cntfullbiasnanos = 0;
     private boolean doWrite = false;
     private boolean closeWrite = false;
+    private boolean startMove=false;
     private MyDatabaseHelper dbHelper;
     private LocalBroadcastReceiver mBroadcastReceiver;
     //    private IntentFilter mIntentFilter;
@@ -284,6 +286,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         start=findViewById(R.id.start);
+        move=findViewById(R.id.startMove);
         end=findViewById(R.id.end);
         clear=findViewById(R.id.clear);
         startLog=findViewById(R.id.start_log);
@@ -410,6 +413,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //                btnConn.setEnabled(false);
                 NtripClient = new ntripClient(1);
                 exec.execute(NtripClient);
+            }
+        });
+        move.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(count2==0) {
+                    startMove = true;
+                    count2 = 1;
+                    move.setActivated(true);
+                }
+                if(count2==1) {
+                    startMove = false;
+                    count2 = 0;
+                    move.setActivated(false);
+                }
             }
         });
 

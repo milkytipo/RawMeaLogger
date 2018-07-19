@@ -422,8 +422,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     startMove = true;
                     count2 = 1;
                     move.setActivated(true);
-                }
-                if(count2==1) {
+                }else if(count2==1) {
                     startMove = false;
                     count2 = 0;
                     move.setActivated(false);
@@ -594,6 +593,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             Log.d("MainActivity", "onSensorChanged: ");
             String msg=message6+message;
+            if(startMove==true) {
+                msg =msg+ "start move";
+                startMove =false;
+            }
             writeToFile("R+Acc.txt", msg);
 //            writeToFile("gyro2.txt", message2);
 //            writeToFile("mag2.txt", message3);

@@ -770,14 +770,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
                             String str = sdf.format(new Date());
                             String msg = str + "," + getUTCTime(gnssClock).UTCtime + ",\n";
-                            writeToFile("GPS_VS_Date.txt", msg);
 
                             String measurementStream2 = String.format("%s%14.3f  %14.3f  %14.3f  %14.3f", getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement),
                                     getDoppler(measurement), getCN0(measurement));
                             rinexObsStream[cnt] = measurementStream2;
                             builder.append(measurementStream2);
+
+                            writeToFile("GPS_VS_Date.txt", msg);
                         }
-                        rinexObsStream[0] = getGPSTime(gnssClock, cnt).GPStime;
+                        rinexObsStream[0] = getGPSTime(gnssClock, cnt).GPStime;   //注意GPStime与UTCtime之间存在18s差
                     }
                 }
             }

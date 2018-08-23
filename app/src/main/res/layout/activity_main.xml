@@ -39,6 +39,8 @@
             android:text="Move"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:background="@drawable/login_button_selector"
             />
     </LinearLayout>
 
@@ -189,6 +191,8 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:text="Start   Log"
+            android:textColor="@android:color/white"
+            android:background="@drawable/login_button_selector"
             />
         <Button
             android:id="@+id/on_switch"
@@ -207,7 +211,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Stop Log and save"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:background="@drawable/login_button_selector"
+            />
 
 
     </LinearLayout>

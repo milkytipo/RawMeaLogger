@@ -1,4 +1,5 @@
 package com.example.a2017101705.rawmealogger;
+
 import android.app.Activity;
 import android.Manifest;
 import android.app.Service;
@@ -78,36 +79,36 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private LocationManager locationManager;
+    private Location mlocation;
     private String measurementStream;
-    private Button start,end,clear,startLog,stopLog,on,btnConn,btnRecv,move;
-    private TextView logView,scText,IMUView;
-    private EditText editCasterIp,editCasterPort,editUsername,editPassword,editLatitude,editLongitude;
+    private Button start, end, clear, startLog, stopLog, on, btnConn, btnRecv, move;
+    private TextView logView, scText, IMUView;
+    private EditText editCasterIp, editCasterPort, editUsername, editPassword, editLatitude, editLongitude;
     private ScrollView scrollView;
     private static final String TAG = "MainActivity";
-
+    private String filename_acc,filename_LLH,filename_R, filename_RawMea, filename_GPS_VS_Date, filename_Rinex,fileName_nav;
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
     private boolean hasPermission;
-    private boolean isDislay=false;
-    private StringBuilder builder,builder1,builder2;
+    private boolean isDislay = false;
+    private StringBuilder builder, builder1, builder2,builder_acc,builder_R,builder_RawMea,builder_GPS_VS_Date,builder_Rinex,builder_nav,builder_LLH;
 
     private String UTCtime;
     private double GPStime = 0;  //周内秒
-    private long fixedFullbiasnanos=0;
-    private Ephemeris eph =new Ephemeris();
-    private int  count = 0;
-    private int count2= 0;
-    private int  cntDB = 0;
-    private int  cntfullbiasnanos = 0;
+    private long fixedFullbiasnanos = 0;
+    private Ephemeris eph = new Ephemeris();
+    private int count = 0,count1 = 0,count2 = 0,count3 = 0;
+    private int cntDB = 0;
+    private int cntfullbiasnanos = 0;
     private boolean doWrite = false;
     private boolean closeWrite = false;
-    private boolean startMove=false;
+    private boolean startMove = false;
     private MyDatabaseHelper dbHelper;
     private LocalBroadcastReceiver mBroadcastReceiver;
     //    private IntentFilter mIntentFilter;
     private LocalBroadcastManager localBroadcastManager;
-    private  ntripClient NtripClient = null;
+    private ntripClient NtripClient = null;
     ExecutorService exec = Executors.newCachedThreadPool();
-    private final mHandler mHandler=new mHandler(this);
+    private final mHandler mHandler = new mHandler(this);
     public static Context context;
     private Ephemeris[] ephArray = new Ephemeris[32];
 
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Manifest.permission.READ_EXTERNAL_STORAGE
     };
     private doubleDiffMeasurements[] RTDMeaAarry = new doubleDiffMeasurements[32];
-    RefInfo[] refInfo =new RefInfo[32];
+    RefInfo[] refInfo = new RefInfo[32];
 
     /*
     IMU参数
@@ -129,119 +130,133 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float[] r = new float[9];
     private float[] Q = new float[4];
     private float[] rotVecValues = null;
-    private float[] rotvecR = new float[9],rotQ = new float[4];
+    private float[] rotvecR = new float[9], rotQ = new float[4];
     private float[] rotvecOrientValues = new float[3];
-
 
 
     public class doubleDiffMeasurements {
         private int Svid;
         private int localSOW;
         private int refSOW;
-        private double  localPseudorange;
-        private double  refPseudorange;
+        private double localPseudorange;
+        private double refPseudorange;
         private double localCarrierphase;
         private double refCarrierphase;
 
-        public void setSvid (int Svid){
-            this.Svid  = Svid;
+        public void setSvid(int Svid) {
+            this.Svid = Svid;
         }
-        public void setLocalSOW(int localSOW){
+
+        public void setLocalSOW(int localSOW) {
             this.localSOW = localSOW;
         }
-        public void setRefSOW(int refSOW){
+
+        public void setRefSOW(int refSOW) {
             this.refSOW = refSOW;
         }
-        public void setLocalPseudorange(double localPseudorange){
+
+        public void setLocalPseudorange(double localPseudorange) {
             this.localPseudorange = localPseudorange;
         }
-        public void setRefPseudorange(double refPseudorange){
+
+        public void setRefPseudorange(double refPseudorange) {
             this.refPseudorange = refPseudorange;
         }
-        public void setLocalCarrierphase(double localCarrierphase){
+
+        public void setLocalCarrierphase(double localCarrierphase) {
             this.localCarrierphase = localCarrierphase;
         }
-        public void setRefCarrierphase(double refCarrierphase){
-            this.refCarrierphase= refCarrierphase;
+
+        public void setRefCarrierphase(double refCarrierphase) {
+            this.refCarrierphase = refCarrierphase;
         }
-        public int getSvid(){
-            return     Svid ;
+
+        public int getSvid() {
+            return Svid;
         }
-        public int getLocalSOW(){
-            return  localSOW;
+
+        public int getLocalSOW() {
+            return localSOW;
         }
-        public int getRefSOW(){
-            return  refSOW;
+
+        public int getRefSOW() {
+            return refSOW;
         }
-        public double getLocalPseudorange(){
-            return  localPseudorange;
+
+        public double getLocalPseudorange() {
+            return localPseudorange;
         }
-        public double getRefPseudorange(){
-            return  refPseudorange;
+
+        public double getRefPseudorange() {
+            return refPseudorange;
         }
-        public double getLocalCarrierphase(){
+
+        public double getLocalCarrierphase() {
             return localCarrierphase;
         }
-        public double getRefCarrierphase(){
-            return  refCarrierphase;
+
+        public double getRefCarrierphase() {
+            return refCarrierphase;
         }
 
     }
 
-    public class LocalBroadcastReceiver extends BroadcastReceiver{
+    public class LocalBroadcastReceiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent){
-            Log.i(TAG,"进入广播接收");
-            String mAction=intent.getAction();
-            switch(mAction){
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "进入广播接收");
+            String mAction = intent.getAction();
+            switch (mAction) {
                 case "ntripClientReceiver1":
-                    String msg1=intent.getStringExtra("string1");
-                    Message message1=Message.obtain();
-                    message1.what=1;
-                    message1.obj=msg1;
+                    String msg1 = intent.getStringExtra("string1");
+                    Message message1 = Message.obtain();
+                    message1.what = 1;
+                    message1.obj = msg1;
                     mHandler.sendMessage(message1);
                     break;
                 case "ntripClientReceiver2":
-                    String msg2=intent.getStringExtra("string2");
-                    Message message2=Message.obtain();
-                    message2.what=2;
-                    message2.obj=msg2;
+                    String msg2 = intent.getStringExtra("string2");
+                    Message message2 = Message.obtain();
+                    message2.what = 2;
+                    message2.obj = msg2;
                     mHandler.sendMessage(message2);
                     break;
                 case "ntripClientReceiver3":
-                    String msg3=intent.getStringExtra("string3");
-                    Message message3=Message.obtain();
-                    message3.what=3;
-                    message3.obj=msg3;
+                    String msg3 = intent.getStringExtra("string3");
+                    Message message3 = Message.obtain();
+                    message3.what = 3;
+                    message3.obj = msg3;
                     mHandler.sendMessage(message3);
                     break;
                 case "ntripClientReceiver4":
-                    String msg4=intent.getStringExtra("string4");
-                    refInfo=(RefInfo[]) intent.getSerializableExtra("string4");
+                    String msg4 = intent.getStringExtra("string4");
+                    refInfo = (RefInfo[]) intent.getSerializableExtra("string4");
                     Bundle ref = new Bundle();
-                    Message message4=Message.obtain();
-                    message4.what=4;
+                    Message message4 = Message.obtain();
+                    message4.what = 4;
 //                    message4.obj=msg4;
 //                    message4.obj = refInfo.getRefPr();
-                    ref.putSerializable("refInfo",refInfo);
+                    ref.putSerializable("refInfo", refInfo);
                     message4.setData(ref);
                     mHandler.sendMessage(message4);
                     break;
-                default:break;
+                default:
+                    break;
             }
         }
     }
 
-    private class mHandler extends Handler{
+    private class mHandler extends Handler {
         private WeakReference<MainActivity> reference;
-        mHandler(MainActivity activity){
-            reference=new WeakReference<MainActivity>(activity);
+
+        mHandler(MainActivity activity) {
+            reference = new WeakReference<MainActivity>(activity);
         }
 
         @Override
-        public void handleMessage(Message msg){
-            if(reference!=null){
-                switch (msg.what){
+        public void handleMessage(Message msg) {
+            if (reference != null) {
+                switch (msg.what) {
                     case 1:
                         scText.append(msg.obj.toString());
                         scText.append("\n");
@@ -257,16 +272,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         break;
                     case 4:
                         RefInfo[] refInfo1 = new RefInfo[32];
-                        for(int i=0;i<32;i++){
-                            refInfo1[i] =new RefInfo();
+                        for (int i = 0; i < 32; i++) {
+                            refInfo1[i] = new RefInfo();
                         }
                         //scText.append("HEX:%s\n");
                         scText.append("重量级测试：！！！\n");
 //                        scText.append(msg.obj.toString());
                         refInfo1 = (RefInfo[]) msg.getData().getSerializable("refInfo");
-                        for(int id =0;id<32;id++){
+                        for (int id = 0; id < 32; id++) {
 //                            RTDMeaAarry[id].setSvid( refInfo1[id].getSvid());
-                            if( refInfo1[id].getRefPhase() !=0 && refInfo1[id].getRefPr() !=0) {
+                            if (refInfo1[id].getRefPhase() != 0 && refInfo1[id].getRefPr() != 0) {
                                 RTDMeaAarry[id].setRefCarrierphase(refInfo1[id].getRefPhase());
                                 RTDMeaAarry[id].setRefPseudorange(refInfo1[id].getRefPr());
 //                                                        SOW
@@ -275,7 +290,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //                        scText.append(String.valueOf(refInfo1.getRefPr()));
                         scText.append("\n");
                         break;
-                    default:break;
+                    default:
+                        break;
                 }
             }
         }
@@ -285,15 +301,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        start=findViewById(R.id.start);
-        move=findViewById(R.id.startMove);
-        end=findViewById(R.id.end);
-        clear=findViewById(R.id.clear);
-        startLog=findViewById(R.id.start_log);
-        stopLog=findViewById(R.id.stop_log);
-        on=findViewById(R.id.on_switch);
-        logView = (TextView)findViewById(R.id.log_view);
-        scrollView= findViewById(R.id.log_scroll);
+        start = findViewById(R.id.start);
+        move = findViewById(R.id.startMove);
+        end = findViewById(R.id.end);
+        clear = findViewById(R.id.clear);
+        startLog = findViewById(R.id.start_log);
+        stopLog = findViewById(R.id.stop_log);
+        on = findViewById(R.id.on_switch);
+        logView = (TextView) findViewById(R.id.log_view);
+        scrollView = findViewById(R.id.log_scroll);
         btnConn = findViewById(R.id.btn_Conn);
         btnRecv = findViewById(R.id.btn_Recv);
 //        editCasterIp = findViewById(R.id.edit_casterIp);
@@ -302,24 +318,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //        editPassword = findViewById(R.id.edit_password);
 //        editLatitude = findViewById(R.id.edit_latitude);
 //        editLongitude = findViewById(R.id.edit_longitude);
-        scText=findViewById(R.id.showText);
-        IMUView=findViewById(R.id.IMU_view);
-        sm = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
-        builder = new StringBuilder("");
-        builder1 = new StringBuilder("");
-        builder2 = new StringBuilder("");
+        scText = findViewById(R.id.showText);
+        IMUView = findViewById(R.id.IMU_view);
+        sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        builder = new StringBuilder();
+        builder1 = new StringBuilder();
+        builder2 = new StringBuilder();
 
-        dbHelper = new MyDatabaseHelper(this,"NAVStore.db",null,1);
 
-        for(int i =0 ;i<32;i++){
-            RTDMeaAarry[i]= new doubleDiffMeasurements();
-            RTDMeaAarry[i].setSvid(i+1);
+        dbHelper = new MyDatabaseHelper(this, "NAVStore.db", null, 1);
+
+        for (int i = 0; i < 32; i++) {
+            RTDMeaAarry[i] = new doubleDiffMeasurements();
+            RTDMeaAarry[i].setSvid(i + 1);
         }
-        for(int j =0;j<32;j++){
+        for (int j = 0; j < 32; j++) {
             ephArray[j] = new Ephemeris();
         }
-        for(int i=0;i<32;i++){
-            refInfo[i] =new RefInfo();
+        for (int i = 0; i < 32; i++) {
+            refInfo[i] = new RefInfo();
         }
 
         start.setOnClickListener(
@@ -349,10 +366,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 new OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        doWrite = true;
 //                        closeWrite =false;
-                        Toast.makeText(getApplicationContext(),"start log ",Toast.LENGTH_SHORT).show();
-                        dbHelper.getWritableDatabase();
+//                        dbHelper.getWritableDatabase();
+                        if (count2 == 0) {
+                            Toast.makeText(getApplicationContext(), " start log ", Toast.LENGTH_SHORT).show();
+                            SimpleDateFormat formatter= new SimpleDateFormat("yyy_MM_dd_HH_mm_ss");
+                            String str =formatter.format(new Date());
+                            filename_acc =String.format("%s_acc.txt",str );
+                            filename_Rinex = String.format("%s_Rinex.txt",str );
+                            filename_GPS_VS_Date =String.format("%s_GPS_VS_Date.txt",str );
+                            filename_RawMea=String.format("%s_RawMea.txt",str );
+                            filename_LLH=String.format("%s_LLH.txt",str );
+                            filename_R=String.format("%s_R.txt",str );
+                            builder_acc =new StringBuilder();
+                            builder_R = new StringBuilder();
+                            builder_LLH = new StringBuilder();
+                            builder_Rinex = new StringBuilder();
+                            builder_GPS_VS_Date = new StringBuilder();
+                            builder_RawMea = new StringBuilder();
+                            builder_nav = new StringBuilder();
+                            doWrite = true;
+                            startLog.setActivated(true);
+//                            stopLog.setActivated(false);
+                            count2 = 1;
+                        } else if (count2 == 1) {
+                            startLog.setActivated(false);
+                            count2 = 0;
+                        }
                     }
                 });
         stopLog.setOnClickListener(
@@ -361,36 +401,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     public void onClick(View view) {
                         doWrite = false;
 //                        closeWrite= true;
-                        Toast.makeText(getApplicationContext(),"save log ",Toast.LENGTH_SHORT).show();
 //                        printDoubleMeasurement(RTDMeaAarry);  //把双差数据打印出来
-                        String filename = "RTDArray.txt";
-                        writeToFile(filename,"--------------------------\n");
-                        for(int n =0;n<32;n++){
-                            String RTDinfo = String.format("svid%s=%s \nlocalPr=%s\nlocalPhase=%s\nrefPr=%s\nrefPhase=%s\n",n+1,RTDMeaAarry[n].getSvid(),RTDMeaAarry[n].getLocalPseudorange(),RTDMeaAarry[n].getLocalCarrierphase(),RTDMeaAarry[n].getRefPseudorange(),RTDMeaAarry[n].getRefCarrierphase());
-//                            writeToFile(filename,RTDinfo);
+                        if (count3 == 0) {
+                            if(builder_acc != null) {
+                                writeToFile(filename_acc, builder_acc.toString());
+                                writeToFile(filename_LLH, builder_LLH.toString());
+                                writeToFile(filename_R, builder_R.toString());
+                                writeToFile(filename_GPS_VS_Date, builder_GPS_VS_Date.toString());
+                                writeToFile(filename_Rinex, builder_Rinex.toString());
+                                Toast.makeText(getApplicationContext(), "save log ", Toast.LENGTH_SHORT).show();
+                            }
+                            stopLog.setActivated(true);
+//                            startLog.setActivated(false);
+                            count3 = 1;
+                        } else if (count3 == 1) {
+                            stopLog.setActivated(false);
+                            count3 = 0;
                         }
+//                        writeToFile(filename_RawMea,builder_RawMea.toString());
+//                        writeToFile(fileName_nav,builder_nav.toString());
+//                        for (int n = 0; n < 32; n++) {
+//                            String RTDinfo = String.format("svid%s=%s \nlocalPr=%s\nlocalPhase=%s\nrefPr=%s\nrefPhase=%s\n", n + 1, RTDMeaAarry[n].getSvid(), RTDMeaAarry[n].getLocalPseudorange(), RTDMeaAarry[n].getLocalCarrierphase(), RTDMeaAarry[n].getRefPseudorange(), RTDMeaAarry[n].getRefCarrierphase());
+//                        }
                     }
                 });
         on.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Vibrator vibrator=(Vibrator)getSystemService(Service.VIBRATOR_SERVICE);
-                vibrator.vibrate(new long[]{0,100}, -1);
-                if(count == 0){
+                Vibrator vibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
+                vibrator.vibrate(new long[]{0, 100}, -1);
+                if (count == 0) {
                     isDislay = true;
-                    Toast.makeText(getApplicationContext()," on ",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), " on ", Toast.LENGTH_SHORT).show();
                     on.setActivated(true);
                     count = 1;
-                }else if(count == 1) {
+                } else if (count == 1) {
                     isDislay = false;
                     Toast.makeText(getApplicationContext(), " stop", Toast.LENGTH_SHORT).show();
                     on.setActivated(false);
                     count = 0;
                 }
-                new  Thread(new Runnable() {
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         mTimeHandler.sendEmptyMessageDelayed(0, 800);
+
                     }
                 }).start();
 
@@ -399,8 +454,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         btnConn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Vibrator vibrator=(Vibrator)getSystemService(Service.VIBRATOR_SERVICE);
-                vibrator.vibrate(new long[]{0,100}, -1);
+                Vibrator vibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
+                vibrator.vibrate(new long[]{0, 100}, -1);
 //                btnRecv.setEnabled(false);
 //                NtripClient = new ntripClient(editCasterIp.getText().toString(),editCasterPort.getText().toString(),editUsername.getText().toString(),editPassword.getText().toString(),editLatitude.getText().toString(),editLongitude.getText().toString(),0);
                 NtripClient = new ntripClient(0);
@@ -418,13 +473,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         move.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(count2==0) {
+                Vibrator vibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
+                vibrator.vibrate(new long[]{0, 100}, -1);
+                if (count1 == 0) {
                     startMove = true;
-                    count2 = 1;
+                    Toast.makeText(getApplicationContext(), " move ", Toast.LENGTH_SHORT).show();
+                    count1 = 1;
                     move.setActivated(true);
-                }else if(count2==1) {
+                } else if (count1 == 1) {
                     startMove = false;
-                    count2 = 0;
+                    Toast.makeText(getApplicationContext(), " stop move ", Toast.LENGTH_SHORT).show();
+                    count1 = 0;
                     move.setActivated(false);
                 }
             }
@@ -432,15 +491,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        // 判断GPS是否正常启动
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Toast.makeText(this, "请开启GPS开关", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivityForResult(intent, 0);
-            hasPermission=false;
-            return;
-        }
-//        String bestProvider = locationManager.getBestProvider(getCriteria(), true);
         mPermissionList.clear();
         for (int i = 0; i < permissionArray.length; i++) {
             if (ActivityCompat.checkSelfPermission(MainActivity.this, permissionArray[i]) != PackageManager.PERMISSION_GRANTED) {
@@ -456,7 +506,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         if(hasPermission) {
-
+//            String bestProvider = locationManager.getBestProvider(getCriteria(), true);
+            locationManager.requestLocationUpdates("gps", 1000, 0, locationListener);
             locationManager.registerGnssMeasurementsCallback(gnssMeasurementsEventListener);
             locationManager.registerGnssNavigationMessageCallback(gnssNavigationMessageListener);
 
@@ -492,24 +543,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         sm.registerListener((SensorEventListener) this,
                 sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),                     // unit：m/s^2
-                20000); //可以改变速率
+                50000,50000); //可以改变速率,第一个值是建议刷新速率，第二个是指定最大延迟
         // 为系统的陀螺仪传感器注册监听器
-        sm.registerListener((SensorEventListener) this,
-                sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE),                               //unit: radians / s
-                20000);
-        sm.registerListener((SensorEventListener) this,
-                sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),                   //unit: uT(micro - Tesla)
-                20000);
+//        sm.registerListener((SensorEventListener) this,
+//                sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE),                               //unit: radians / s
+//                50000);
+//        sm.registerListener((SensorEventListener) this,
+//                sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),                   //unit: uT(micro - Tesla)
+//                50000);
         sm.registerListener((SensorEventListener) this,
                 sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),                   //unit: uT(micro - Tesla)
-                20000);
+                50000,50000);
+
     }
     @Override
     public void onSensorChanged(SensorEvent event) {
-        String message = new String();
-        String message2 = new String();
-        String message3 = new String();
-        String message6 = new String();
+//        StringBuilder R_acc = new StringBuilder();
+//        StringBuilder R_acc2 = new StringBuilder();
+//        String message = new String();
+//        String message2 = new String();
+//        String message3 = new String();
+//        String message6 = new String();
 
         DecimalFormat df = new DecimalFormat("#,##0.000");
         int sensorType = event.sensor.getType();
@@ -517,14 +571,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             switch (sensorType) {
                 case Sensor.TYPE_ACCELEROMETER:
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
-                    String str = sdf.format(new Date());
-                    message = str + ",";// + "\n";
-                    float X = event.values[0];
-                    float Y = event.values[1];
-                    float Z = event.values[2];
-                    message += df.format(X) + ",";
-                    message += df.format(Y) + ",";
-                    message += df.format(Z) + ",\n";
+//                    String str = sdf.format(new Date());
+//                    message = str + ",";// + "\n";
+//                    float X = event.values[0];
+//                    float Y = event.values[1];
+//                    float Z = event.values[2];
+//                    message += df.format(X) + ",";
+//                    message += df.format(Y) + ",";
+//                    message += df.format(Z) + ",\n";
+//                    R_acc.append(sdf.format(new Date()));
+//                    R_acc.append(",");
+//                    R_acc.append(df.format(event.values[0]));
+//                    R_acc.append(",");
+//                    R_acc.append(df.format(event.values[1]));
+//                    R_acc.append(",");
+//                    R_acc.append(df.format(event.values[2]));
+//                    R_acc.append(",\n");
+                    builder_acc.append(sdf.format(new Date()));
+                    builder_acc.append(",");
+                    builder_acc.append(df.format(event.values[0]));
+                    builder_acc.append(",");
+                    builder_acc.append(df.format(event.values[1]));
+                    builder_acc.append(",");
+                    builder_acc.append(df.format(event.values[2]));
+                    builder_acc.append(",\n");
 //                    builder2 = new StringBuilder("");
 //                    builder2.append(message);
 //                    IMUView.setText(message);
@@ -566,6 +636,60 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     for (int i = 0; i < rotVecValues.length; i++) {
                         rotVecValues[i] = event.values[i];
                     }
+        /*
+        通过vector来获得R和Q
+         */
+                    if (rotVecValues != null) {
+//                        SensorManager.getQuaternionFromVector(rotQ, rotVecValues);
+                        SensorManager.getRotationMatrixFromVector(rotvecR, rotVecValues);
+//                    q1 = new float[4];
+//                    q1 = rotQ;
+                        SimpleDateFormat sdf6 = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
+//                        String str6 = sdf6.format(new Date());
+//                        message6 = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,", str6, rotvecR[0], rotvecR[1], rotvecR[2], rotvecR[3], rotvecR[4], rotvecR[5], rotvecR[6], rotvecR[7], rotvecR[8]);
+//                        R_acc2.append(sdf6.format(new Date()));
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[0]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[1]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[2]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[3]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[4]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[5]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[6]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[7]);
+//                        R_acc2.append(",");
+//                        R_acc2.append(rotvecR[8]);
+//
+                        builder_R.append(sdf6.format(new Date()));
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[0]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[1]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[2]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[3]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[4]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[5]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[6]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[7]);
+                        builder_R.append(",");
+                        builder_R.append(rotvecR[8]);
+                        builder_R.append(",\n");
+
+                    }
+                    break;
             }
 //            float Azimuth1 = 0, pitch1 = 0, roll1 = 0, Azimuth2 = 0, pitch2 = 0, roll2 = 0;
 //            float[] q1 = new float[4];
@@ -574,33 +698,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            float[] q2 = new float[4];
 //            for (int i = 0; i <= 3; i++)
 //                q2[i] = 0;
-        /*
-        通过vector来获得R和Q
-         */
-            if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
 
-
-                if (rotVecValues != null) {
-                    SensorManager.getQuaternionFromVector(rotQ, rotVecValues);
-                    SensorManager.getRotationMatrixFromVector(rotvecR, rotVecValues);
-//                    q1 = new float[4];
-//                    q1 = rotQ;
-                    SimpleDateFormat sdf6 = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
-                    String str6 = sdf6.format(new Date());
-                    message6 = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,", str6, rotvecR[0], rotvecR[1], rotvecR[2], rotvecR[3], rotvecR[4], rotvecR[5], rotvecR[6], rotvecR[7], rotvecR[8]);
-                }
-            }
-
-            Log.d("MainActivity", "onSensorChanged: ");
-            String msg=message6+message;
-            if(startMove==true) {
-                msg =msg+ "start move";
-                startMove =false;
-            }
-            writeToFile("R+Acc.txt", msg);
-//            writeToFile("gyro2.txt", message2);
-//            writeToFile("mag2.txt", message3);
-//            writeToFile("R.txt", message6);
+//            Log.d("MainActivity", "onSensorChanged: ");
+//            String msg=message6+message;
+//            if(startMove==true) {
+//                msg =msg+ "start move";
+//                startMove =false;
+//            }
+//            builder_acc.append(R_acc);
+//            builder_acc.append(R_acc2);
         }
     }
 
@@ -622,7 +728,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     	 * 很关键的部分：注意，说明文档中提到，即使activity不可见的时候，感应器依然会继续的工作，测试的时候可以发现，没有正常的刷新频率
     	 * 也会非常高，所以一定要在onPause方法中关闭触发器，否则讲耗费用户大量电量，很不负责。
     	 * */
-        sm.unregisterListener(this);
         super.onPause();
     }
     @Override
@@ -630,6 +735,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onDestroy();
         locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementsEventListener);
         LocalBroadcastManager.getInstance(context).unregisterReceiver(mBroadcastReceiver);
+        locationManager.removeUpdates(locationListener);
     }
 
     /*
@@ -675,8 +781,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private LocationListener locationListener = new LocationListener() {
 
         public void onLocationChanged(Location location) {
-
-            updateView(location);
+            if(doWrite) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
+                builder_LLH.append(sdf.format(new Date()));
+                builder_LLH.append(",");
+                builder_LLH.append(location.getLongitude());
+                builder_LLH.append(",");
+                builder_LLH.append(location.getLatitude());
+                builder_LLH.append(",");
+                builder_LLH.append(location.getAltitude());
+                builder_LLH.append(",\n");
+//            updateView(location);
+            }
         }
 
         public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -688,7 +804,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         public void onProviderDisabled(String provider) {
-            updateView(null);
+//            updateView(null);
         }
 
     };
@@ -696,8 +812,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void updateView(Location location) {   //不能再用logview
         if (location != null) {
             logView.setText("设备位置信息\n ");
-            logView.setText("经度: "+ String.valueOf(location.getLongitude()));
-            logView.setText("纬度: "+String.valueOf(location.getLatitude()));
+            logView.append("经度: "+ String.valueOf(location.getLongitude()));
+            logView.append("\n纬度: "+String.valueOf(location.getLatitude()));
+            logView.append("\n高度: "+String.valueOf(location.getAltitude()));
         }
     }
 
@@ -708,12 +825,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         public void handleMessage(Message msg){
             switch (msg.what){
                 case 0:
-                    if(isDislay) {
+//                    if(isDislay) {
 //                        logView.setText(String.format("%s", builder.toString()));
 //                        logView.append(String.format("%s", builder1.toString()));
 //                        IMUView.setText(String.format("%s", builder2.toString()));
-
-                    }
+//
+//                    }
                     sendEmptyMessageDelayed(0, 800);     //数据大概1s刷新一次，所以设置为0.8
                     break;
             }
@@ -745,6 +862,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //                            builder.append(toStringMeasurement(measurement));   //显示卫星原始GNSS观测量
 //                            builder.append(toStringClock(event.getClock()));    //显示卫星原始clock观测量
 //                            builder.append(String.format(format,"cnt   ",cnt+"\n"));
+                    builder_RawMea.append(toStringMeasurement(measurement));
+                    builder_RawMea.append(toStringClock(event.getClock()));
+//                    builder_RawMea.append()
+
                     int svid = measurement.getSvid();
                     RTDMeaAarry[svid-1].setSvid(svid);
                     RTDMeaAarry[svid-1].setLocalPseudorange( getPseudorange(measurement,gnssClock) );
@@ -759,35 +880,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     builder.append(String.format(format, "L1phase is ", getL1phase(measurement) + "\n\n"));
                     builder.append("----------------------\n");
                     if (doWrite) {
-//                        String fileName = String.format("%s_%s.txt", "gnssMeasurement", getGNSSObstype(measurement));
-//                                String measurementStream = String.format("%s,%s,%s,%s",getUTCTime(gnssClock).UTCtime,getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement))+"\n";
-//                        String measurementStream = String.format("%s,%s,%s,%s,%s,%s,%s,%s", getUTCTime(gnssClock).UTCtime, getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement), gnssClock.getFullBiasNanos(), fixedFullbiasnanos, gnssClock.getTimeNanos(), measurement.getReceivedSvTimeNanos()) + "\n";
-
-//                        writeToFile(fileName, measurementStream);
-
                         if (dataFilter(measurement, gnssClock) && getPseudorange(measurement, gnssClock) < 9e9) {
                             cnt++;
                             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd   HH:mm:ss");
-                            String str = sdf.format(new Date());
-                            String msg = str + "," + getUTCTime(gnssClock).UTCtime + ",\n";
+                            builder_GPS_VS_Date.append(sdf.format(new Date()));
+                            builder_GPS_VS_Date.append(",");
+                            builder_GPS_VS_Date.append(getUTCTime(gnssClock).UTCtime );
+                            builder_GPS_VS_Date.append(",\n");
 
                             String measurementStream2 = String.format("%s%14.3f  %14.3f  %14.3f  %14.3f", getGNSSObstype(measurement), getPseudorange(measurement, gnssClock), getL1phase(measurement),
                                     getDoppler(measurement), getCN0(measurement));
                             rinexObsStream[cnt] = measurementStream2;
                             builder.append(measurementStream2);
-
-                            writeToFile("GPS_VS_Date.txt", msg);
                         }
                         rinexObsStream[0] = getGPSTime(gnssClock, cnt).GPStime;   //注意GPStime与UTCtime之间存在18s差
                     }
                 }
             }
-            String filenameRinex  = String.format("2018_%s_%s.txt",getUTCTime(gnssClock).month,getUTCTime(gnssClock).day);
             if(doWrite) {
                 for (int i = 0; i <= cnt; i++) {
                     if (rinexObsStream[i] != null) {
-                        String s = String.format("%s\n", rinexObsStream[i]);
-                        writeToFile(filenameRinex, s);
+                        builder_Rinex.append(rinexObsStream[i]);
+                        builder_Rinex.append("\n");
                     }
                 }
             }
@@ -808,6 +922,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             int ephi = event.getSvid();
             String str=bytesToHex(event.getData());
             if(event.getType()==GnssNavigationMessage.TYPE_GPS_L1CA && event.getStatus()==GnssNavigationMessage.STATUS_PARITY_PASSED){
+                ephArray[ephi-1].Svid= ephi;
                 ephArray[ephi-1].Svid= ephi;
 //                eph.Svid =  event.getSvid();
                 builder1.append(String.format("ID : %s", ephArray[ephi-1].Svid+"\n"));
@@ -851,9 +966,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 String measurementStream_navRaw = String.format("%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s \n",ephArray[ephi-1].toc,ephArray[ephi-1].af0,ephArray[ephi-1].af1,ephArray[ephi-1].af2,ephArray[ephi-1].TGD,ephArray[ephi-1].toe,ephArray[ephi-1].sqrtA,ephArray[ephi-1].es,ephArray[ephi-1].M0,ephArray[ephi-1].delta_n,ephArray[ephi-1].Cuc,ephArray[ephi-1].Cus,ephArray[ephi-1].Crs,ephArray[ephi-1].i0,ephArray[ephi-1].Omega_0,
                         ephArray[ephi-1].w,ephArray[ephi-1].i_dot,ephArray[ephi-1].Omega_dot,ephArray[ephi-1].Crc,ephArray[ephi-1].Cic,ephArray[ephi-1].Cis);
-                String fileName_navRaw = String.format("%s_%s.txt", "rawNav", event.getSvid());
-                String pvtOfSat= String.format("%s %s %s \n",PVTofSat[0][0],PVTofSat[0][1],PVTofSat[0][2]);
-                String fileName_nav = String.format("%s_%s.txt", "PVTofNav", event.getSvid());
+//                String fileName_navRaw = String.format("%s_%s.txt", "rawNav", event.getSvid());
+//                String pvtOfSat= String.format("%s %s %s \n",PVTofSat[0][0],PVTofSat[0][1],PVTofSat[0][2]);
+//                String fileName_nav = String.format("%s_%s.txt", "PVTofNav", event.getSvid());
 //                writeToFile(fileName_nav,pvtOfSat);
 //                writeToFile(fileName_navRaw,measurementStream_navRaw);
             }
